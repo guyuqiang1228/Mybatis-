@@ -22,6 +22,9 @@ import org.apache.ibatis.session.Configuration;
 
 /**
  * @author Clinton Begin
+ * parameterMap和resultMap类似
+ * parameterMap通常应用于mapper中有多个参数要传进来时,表示将查询结果集中列值的类型一一映射到java对象属性的类型上
+ * 在开发过程中不推荐这种方式，一般使用parameterType直接将查询结果列值类型自动对应到java对象属性类型上，不再配置映射关系一一对应。
  */
 public class ParameterMap {
 

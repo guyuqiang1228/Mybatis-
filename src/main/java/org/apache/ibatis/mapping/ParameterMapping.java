@@ -24,19 +24,32 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 
 /**
  * @author Clinton Begin
+ * SQL语句中的#{}详细应该是这样的：
+ * #｛ id, javaType= int, jdbcType=NUMERIC, typeHandler=DemoTypeHandler ｝
+ * 该对象就用来存储这个内容
+ * 但是对于大多数情况，只有 property=id这一项。其他的会被推测出来，而不是被指定
  */
 public class ParameterMapping {
 
   private Configuration configuration;
 
+  // 参数的名称
   private String property;
+  // 输入还是输出参数，针对存储过程有用
   private ParameterMode mode;
+  // 参数的java类型
   private Class<?> javaType = Object.class;
+  // 参数的jdbc类型
   private JdbcType jdbcType;
+  // 数值精度
   private Integer numericScale;
+  // 类型处理器
   private TypeHandler<?> typeHandler;
+  // 参数为OUT或者INOUT时，对应的resultMap的
   private String resultMapId;
+  // jdbcType属性值
   private String jdbcTypeName;
+  // 扩展字段
   private String expression;
 
   private ParameterMapping() {

@@ -77,7 +77,11 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   private final Configuration configuration;
   private final MappedStatement mappedStatement;
   private final RowBounds rowBounds;
+
+  // 处理存储过程的输出参数的处理器
   private final ParameterHandler parameterHandler;
+
+  // 处理单条结果的处理器
   private final ResultHandler<?> resultHandler;
   private final BoundSql boundSql;
   private final TypeHandlerRegistry typeHandlerRegistry;
@@ -852,17 +856,32 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   //
   // DISCRIMINATOR
   //
-
+  /**
+   * 应用鉴别器
+   * @param rs 数据库查询出的结果集
+   * @param resultMap 当前的ResultMap对象
+   * @param columnPrefix 属性的父级前缀
+   * @return 已经不包含鉴别器的新的ResultMap对象
+   * @throws SQLException
+   */
   public ResultMap resolveDiscriminatedResultMap(ResultSet rs, ResultMap resultMap, String columnPrefix) throws SQLException {
+    // 已经处理过的鉴别器
     Set<String> pastDiscriminators = new HashSet<>();
     Discriminator discriminator = resultMap.getDiscriminator();
     while (discriminator != null) {
+      // 求解条件判断的结果，这个结果值就是鉴别器鉴别的依据
       final Object value = getDiscriminatorValue(rs, discriminator, columnPrefix);
+      // 根据真实值判断属于哪个分支
       final String discriminatedMapId = discriminator.getMapIdFor(String.valueOf(value));
+      // 从接下来的case里面找到这个分支
       if (configuration.hasResultMap(discriminatedMapId)) {
+        // 找出指定的resultMap
         resultMap = configuration.getResultMap(discriminatedMapId);
+        // 继续分析下一层
         Discriminator lastDiscriminator = discriminator;
+        // 查看本resultMap内是否还有鉴别器
         discriminator = resultMap.getDiscriminator();
+        // 辨别器出现了环
         if (discriminator == lastDiscriminator || !pastDiscriminators.add(discriminatedMapId)) {
           break;
         }
@@ -873,9 +892,19 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return resultMap;
   }
 
+  /**
+   * 求解鉴别器条件判断的结果
+   * @param rs 数据库查询出的结果集
+   * @param discriminator 鉴别器
+   * @param columnPrefix
+   * @return 计算出鉴别器的value对应的真实结果
+   * @throws SQLException
+   */
   private Object getDiscriminatorValue(ResultSet rs, Discriminator discriminator, String columnPrefix) throws SQLException {
     final ResultMapping resultMapping = discriminator.getResultMapping();
+    // 要鉴别的字段的typeHandler
     final TypeHandler<?> typeHandler = resultMapping.getTypeHandler();
+    // prependPrefix(resultMapping.getColumn(), columnPrefix) 得到列名，然后取出列的值
     return typeHandler.getResult(rs, prependPrefix(resultMapping.getColumn(), columnPrefix));
   }
 

@@ -35,16 +35,25 @@ import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.reflection.SystemMetaObject;
 
 /**
+ * 缓存建造者
  * @author Clinton Begin
  */
 public class CacheBuilder {
+  // Cache的编号
   private final String id;
+  // Cache的实现类
   private Class<? extends Cache> implementation;
+  // Cache的装饰器列表
   private final List<Class<? extends Cache>> decorators;
+  // Cache的大小
   private Integer size;
+  // Cache的清理间隔
   private Long clearInterval;
+  // Cache是否可读写
   private boolean readWrite;
+  // Cache的配置信息
   private Properties properties;
+  // Cache是否阻塞
   private boolean blocking;
 
   public CacheBuilder(String id) {
