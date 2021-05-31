@@ -24,6 +24,7 @@ import ognl.MemberAccess;
 import org.apache.ibatis.reflection.Reflector;
 
 /**
+ * 为访问对象的属性做准备
  * The {@link MemberAccess} class that based on <a href=
  * 'https://github.com/jkuhnert/ognl/blob/OGNL_3_2_1/src/java/ognl/DefaultMemberAccess.java'>DefaultMemberAccess</a>.
  *
@@ -36,31 +37,57 @@ import org.apache.ibatis.reflection.Reflector;
  */
 class OgnlMemberAccess implements MemberAccess {
 
+  // 当前环境下，通过反射是否能够修改对象属性的可访问性
   private final boolean canControlMemberAccessible;
 
   OgnlMemberAccess() {
     this.canControlMemberAccessible = Reflector.canControlMemberAccessible();
   }
 
+  /**
+   * 设置属性的可访问性
+   * @param context 环境上下文
+   * @param target 目标对象
+   * @param member 目标对象的目标成员
+   * @param propertyName 属性名称
+   * @return 属性的可访问性
+   */
   @Override
   public Object setup(Map context, Object target, Member member, String propertyName) {
     Object result = null;
-    if (isAccessible(context, target, member, propertyName)) {
+    if (isAccessible(context, target, member, propertyName)) { // 如果允许修改属性的可访问性
       AccessibleObject accessible = (AccessibleObject) member;
-      if (!accessible.isAccessible()) {
+      if (!accessible.isAccessible()) { // 如果属性原本不可访问
         result = Boolean.FALSE;
+        // 将属性修改为可访问
         accessible.setAccessible(true);
       }
     }
     return result;
   }
 
+  /**
+   * 将属性的可访问性恢复到指定状态
+   * @param context 环境上下文
+   * @param target 目标对象
+   * @param member 目标对象的目标成员
+   * @param propertyName 属性名称
+   * @param state 指定的状态
+   */
   @Override
   public void restore(Map context, Object target, Member member, String propertyName,
       Object state) {
     // Flipping accessible flag is not thread safe. See #1648
   }
 
+  /**
+   * 判断对象属性是否可访问
+   * @param context 环境上下文
+   * @param target 目标对象
+   * @param member 目标对象的目标成员
+   * @param propertyName 属性名称
+   * @return 判断结果
+   */
   @Override
   public boolean isAccessible(Map context, Object target, Member member, String propertyName) {
     return canControlMemberAccessible;

@@ -14,6 +14,7 @@
  *    limitations under the License.
  */
 /**
+ * 语言基础包
  * Base package for languages.
  */
 package org.apache.ibatis.scripting;

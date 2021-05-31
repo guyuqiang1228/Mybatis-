@@ -23,6 +23,10 @@ import org.apache.ibatis.parsing.XNode;
 import org.apache.ibatis.scripting.defaults.DefaultParameterHandler;
 import org.apache.ibatis.session.Configuration;
 
+// 脚本语言解释器
+// 在接口上注解的SQL语句，就是由它进行解析的
+// @Select("select * from `user` where id = #{id}")
+//User queryUserById(Integer id);
 public interface LanguageDriver {
 
   /**
@@ -35,6 +39,13 @@ public interface LanguageDriver {
    * @return the parameter handler
    * @see DefaultParameterHandler
    */
+  /**
+   * 创建参数处理器。参数处理器能将实参传递给JDBC statement。
+   * @param mappedStatement 完整的数据库操作节点
+   * @param parameterObject 参数对象
+   * @param boundSql 数据库操作语句转化的BoundSql对象
+   * @return 参数处理器
+   */
   ParameterHandler createParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql);
 
   /**
@@ -46,6 +57,13 @@ public interface LanguageDriver {
    * @param parameterType input parameter type got from a mapper method or specified in the parameterType xml attribute. Can be null.
    * @return the sql source
    */
+  /**
+   * 创建SqlSource对象（基于映射文件的方式）。该方法在MyBatis启动阶段，读取映射接口或映射文件时被调用
+   * @param configuration 配置信息
+   * @param script 映射文件中的数据库操作节点
+   * @param parameterType 参数类型
+   * @return SqlSource对象
+   */
   SqlSource createSqlSource(Configuration configuration, XNode script, Class<?> parameterType);
 
   /**
@@ -56,6 +74,13 @@ public interface LanguageDriver {
    * @param script The content of the annotation
    * @param parameterType input parameter type got from a mapper method or specified in the parameterType xml attribute. Can be null.
    * @return the sql source
+   */
+  /**
+   * 创建SqlSource对象（基于注解的方式）。该方法在MyBatis启动阶段，读取映射接口或映射文件时被调用
+   * @param configuration 配置信息
+   * @param script 注解中的SQL字符串
+   * @param parameterType 参数类型
+   * @return SqlSource对象，具体来说是DynamicSqlSource和RawSqlSource中的一种
    */
   SqlSource createSqlSource(Configuration configuration, String script, Class<?> parameterType);
 

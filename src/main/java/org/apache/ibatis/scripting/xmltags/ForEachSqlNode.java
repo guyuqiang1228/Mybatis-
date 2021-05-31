@@ -21,19 +21,29 @@ import org.apache.ibatis.parsing.GenericTokenParser;
 import org.apache.ibatis.session.Configuration;
 
 /**
+ * <foreach>节点
  * @author Clinton Begin
  */
 public class ForEachSqlNode implements SqlNode {
   public static final String ITEM_PREFIX = "__frch_";
 
+  // 表达式求值器
   private final ExpressionEvaluator evaluator;
+  // collection属性的值
   private final String collectionExpression;
+  // 节点内的内容
   private final SqlNode contents;
+  // open属性的值，即元素左侧插入的字符串
   private final String open;
+  // close属性的值，即元素右侧插入的字符串
   private final String close;
+  // separator属性的值，即元素分隔符
   private final String separator;
+  // item属性的值，即元素
   private final String item;
+  // index属性的值，即元素的编号
   private final String index;
+  // 配置信息
   private final Configuration configuration;
 
   public ForEachSqlNode(Configuration configuration, SqlNode contents, String collectionExpression, String index, String item, String open, String close, String separator) {
@@ -48,34 +58,48 @@ public class ForEachSqlNode implements SqlNode {
     this.configuration = configuration;
   }
 
+  /**
+   * 完成该节点自身的解析
+   * @param context 上下文环境，节点自身的解析结果将合并到该上下文环境中
+   * @return 解析是否成功
+   */
   @Override
   public boolean apply(DynamicContext context) {
+    // 获取环境上下文信息
     Map<String, Object> bindings = context.getBindings();
+    // 交给表达式求值器解析表达式，从而获得迭代器
     final Iterable<?> iterable = evaluator.evaluateIterable(collectionExpression, bindings);
-    if (!iterable.iterator().hasNext()) {
+    if (!iterable.iterator().hasNext()) { // 没有可以迭代的元素
+      // 不需要拼接信息，直接返回
       return true;
     }
     boolean first = true;
+    // 添加open字符串
     applyOpen(context);
     int i = 0;
     for (Object o : iterable) {
       DynamicContext oldContext = context;
-      if (first || separator == null) {
+      if (first || separator == null) { // 第一个元素
+        // 添加元素
         context = new PrefixedContext(context, "");
       } else {
+        // 添加间隔符
         context = new PrefixedContext(context, separator);
       }
       int uniqueNumber = context.getUniqueNumber();
       // Issue #709
-      if (o instanceof Map.Entry) {
+      if (o instanceof Map.Entry) { // 被迭代对象是Map.Entry
+        // 将被迭代对象放入上下文环境中
         @SuppressWarnings("unchecked")
         Map.Entry<Object, Object> mapEntry = (Map.Entry<Object, Object>) o;
         applyIndex(context, mapEntry.getKey(), uniqueNumber);
         applyItem(context, mapEntry.getValue(), uniqueNumber);
       } else {
+        // 将被迭代对象放入上下文环境中
         applyIndex(context, i, uniqueNumber);
         applyItem(context, o, uniqueNumber);
       }
+      // 根据上下文环境等信息构建内容
       contents.apply(new FilteredDynamicContext(configuration, context, index, item, uniqueNumber));
       if (first) {
         first = !((PrefixedContext) context).isPrefixApplied();
@@ -83,7 +107,9 @@ public class ForEachSqlNode implements SqlNode {
       context = oldContext;
       i++;
     }
+    // 添加close字符串
     applyClose(context);
+    // 清理此次操作对环境的影响
     context.getBindings().remove(item);
     context.getBindings().remove(index);
     return true;

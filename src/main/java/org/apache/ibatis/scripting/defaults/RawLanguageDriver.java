@@ -33,18 +33,26 @@ public class RawLanguageDriver extends XMLLanguageDriver {
 
   @Override
   public SqlSource createSqlSource(Configuration configuration, XNode script, Class<?> parameterType) {
+    // 调用父类方法完成操作
     SqlSource source = super.createSqlSource(configuration, script, parameterType);
+    // 校验得到的SqlSource是RawSqlSource
     checkIsNotDynamic(source);
     return source;
   }
 
   @Override
   public SqlSource createSqlSource(Configuration configuration, String script, Class<?> parameterType) {
+    // 调用父类方法完成操作
     SqlSource source = super.createSqlSource(configuration, script, parameterType);
+    // 校验得到的SqlSource是RawSqlSource
     checkIsNotDynamic(source);
     return source;
   }
 
+  /**
+   * 校验输入的SqlSource是RawSqlSource，否则便抛出异常
+   * @param source 输入的SqlSource对象
+   */
   private void checkIsNotDynamic(SqlSource source) {
     if (!RawSqlSource.class.equals(source.getClass())) {
       throw new BuilderException("Dynamic content is not allowed when using RAW language");

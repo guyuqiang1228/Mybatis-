@@ -23,6 +23,7 @@ import org.apache.ibatis.scripting.ScriptingException;
 import org.apache.ibatis.type.SimpleTypeRegistry;
 
 /**
+ * 包含${}占位符的动态sql节点
  * @author Clinton Begin
  */
 public class TextSqlNode implements SqlNode {
@@ -38,20 +39,38 @@ public class TextSqlNode implements SqlNode {
     this.injectionFilter = injectionFilter;
   }
 
+  /**
+   * 判断当前节点是不是动态的
+   * @return 节点是否为动态
+   */
   public boolean isDynamic() {
+    // 占位符处理器，该处理器并不会处理占位符，而是判断是不是含有占位符
     DynamicCheckerTokenParser checker = new DynamicCheckerTokenParser();
     GenericTokenParser parser = createParser(checker);
+    // 使用占位符处理器。如果节点内容中含有占位符，则DynamicCheckerTokenParser对象的isDynamic属性将会被置为true
     parser.parse(text);
     return checker.isDynamic();
   }
 
+  /**
+   * 完成该节点自身的解析
+   * @param context 上下文环境，节点自身的解析结果将合并到该上下文环境中
+   * @return 解析是否成功
+   */
   @Override
   public boolean apply(DynamicContext context) {
+    // 创建通用的占位符解析器
     GenericTokenParser parser = createParser(new BindingTokenParser(context, injectionFilter));
+    // 替换掉其中的${}占位符
     context.appendSql(parser.parse(text));
     return true;
   }
 
+  /**
+   * 创建一个通用的占位符解析器，用来解析${}占位符
+   * @param handler 用来处理${}占位符的专用处理器
+   * @return 占位符解析器
+   */
   private GenericTokenParser createParser(TokenHandler handler) {
     return new GenericTokenParser("${", "}", handler);
   }
@@ -68,12 +87,14 @@ public class TextSqlNode implements SqlNode {
 
     @Override
     public String handleToken(String content) {
+      // 拿到用户给出的实参
       Object parameter = context.getBindings().get("_parameter");
       if (parameter == null) {
         context.getBindings().put("value", null);
       } else if (SimpleTypeRegistry.isSimpleType(parameter.getClass())) {
         context.getBindings().put("value", parameter);
       }
+      // 根据上下文信息，得到占位符中内容的值
       Object value = OgnlCache.getValue(content, context.getBindings());
       String srtValue = value == null ? "" : String.valueOf(value); // issue #274 return "" instead of "null"
       checkInjection(srtValue);

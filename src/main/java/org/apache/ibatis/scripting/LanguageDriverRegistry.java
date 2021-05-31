@@ -21,12 +21,15 @@ import java.util.Map;
 import org.apache.ibatis.util.MapUtil;
 
 /**
+ * 语言驱动的注册表
  * @author Frank D. Martinez [mnesarco]
  */
 public class LanguageDriverRegistry {
 
+  // 所有的语言驱动类
   private final Map<Class<? extends LanguageDriver>, LanguageDriver> LANGUAGE_DRIVER_MAP = new HashMap<>();
 
+  // 默认的语言驱动类
   private Class<? extends LanguageDriver> defaultDriverClass;
 
   public void register(Class<? extends LanguageDriver> cls) {
